@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Target QR Code Generator</title>
+  <!-- QR Code library -->
+  <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+  <style>
+    :root {
+      --target-red: #E30B17;
+      --target-red-dark: #c00914;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-300: #d1d5db;
+      --gray-500: #6b7280;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Helvetica', 'Arial', sans-serif;
+    }
+
+    body {
+      background-color: #f7f7f7;
+      color: var(--gray-700);
+      line-height: 1.5;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 540px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background-color: var(--target-red);
+      color: white;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 1.875rem;
+      font-weight: bold;
+    }
+
+    .header p {
+      opacity: 0.8;
+      margin-top: 0.25rem;
+      font-size: 1rem;
+    }
+
+    .content {
+      padding: 1.5rem;
+    }
+
+    .section {
+      background-color: var(--gray-50);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: bold;
+      color: var(--gray-700);
+      margin-bottom: 0.75rem;
+    }
+
+    .option-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .option-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid var(--gray-300);
+      background-color: white;
+    }
+
+    .option-card:hover {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .option-card.selected {
+      background-color: #fee2e2;
+      border: 2px solid var(--target-red);
+    }
+
+    .option-card svg {
+      width: 2rem;
+      height: 2rem;
+      color: var(--target-red);
+      margin-bottom: 0.5rem;
+    }
+
+    .option-card .option-label {
+      font-weight: 500;
+    }
+
+    .option-card .option-description {
+      font-size: 0.75rem;
+      color: var(--gray-500);
+      margin-top: 0.25rem;
+      text-align: center;
+    }
+
+    .input-group {
+      margin-bottom: 1rem;
+    }
+
+    .input-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--gray-700);
+      margin-bottom: 0.25rem;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--gray-300);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .input-field:focus {
+      border-color: var(--target-red);
+      box-shadow: 0 0 0 3px rgba(227, 11, 23, 0.2);
+    }
+
+    .input-field.error {
+      border-color: var(--target-red);
+    }
+
+    .error-message {
+      color: var(--target-red);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+
+    .logo-upload {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo-upload-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .logo-preview {
+      width: 4rem;
+      height: 4rem;
+      border: 2px dashed var(--gray-300);
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.2s ease;
+      margin-right: 1rem;
+    }
+
+    .logo-preview:hover {
+      border-color: var(--target-red);
+    }
+
+    .logo-preview svg {
+      width: 2rem;
+      height: 2rem;
+      color: var(--gray-400);
+    }
+
+    .logo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .logo-info span {
+      display: block;
+    }
+
+    .logo-info .logo-title {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .logo-info .logo-subtitle {
+      font-size: 0.75rem;
+      color: var(--gray-500);
+    }
+
+    .logo-toggle {
+      display: flex;
+      align-items: center;
+    }
+
+    .logo-toggle input {
+      margin-right: 0.5rem;
+    }
+
+    .generate-btn {
+      width: 100%;
+      background-color: var(--target-red);
+      color: white;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      font-size: 1.125rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s ease;
+    }
+
+    .generate-btn:hover {
+      background-color: var(--target-red-dark);
+    }
+
+    .generate-btn svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      margin-right: 0.5rem;
+    }
+
+    .result {
+      margin-top: 2rem;
+      display: none;
+    }
+
+    .result.visible {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .result-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: var(--gray-800);
+    }
+
+    .qrcode-container {
+      position: relative;
+      padding: 1.5rem;
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--gray-300);
+    }
+
+    .logo-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+      display: none;
+    }
+
+    .logo-overlay.visible {
+      display: block;
+    }
+
+    .logo-overlay img {
+      width: 4rem;
+      height: 4rem;
+      object-fit: contain;
+    }
+
+    .qr-description {
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: var(--gray-600);
+    }
+
+    .download-btn {
+      margin-top: 1rem;
+      background-color: var(--gray-800);
+      color: white;
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .download-btn:hover {
+      background-color: var(--gray-900);
+    }
+
+    .download-btn svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      margin-right: 0.5rem;
+    }
+
+    /* Hide inputs based on selected type */
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Target QR Generator</h1>
+      <p>Create branded QR codes for Target</p>
+    </div>
+    
+    <div class="content">
+      <!-- QR Type Selection -->
+      <div class="section">
+        <h2 class="section-title">QR Code Type</h2>
+        <div class="option-grid">
+          <div class="option-card selected" id="url-option">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            <span class="option-label">URL</span>
+          </div>
+          
+          <div class="option-card" id="email-option">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <span class="option-label">Email</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- URL Input -->
+      <div class="section" id="url-input">
+        <h2 class="section-title">Enter URL</h2>
+        <input
+          type="url"
+          id="url-text"
+          class="input-field"
+          placeholder="https://www.target.com"
+        >
+        <p class="error-message" id="url-error">Please enter a valid URL (include http:// or https://)</p>
+      </div>
+      
+      <!-- Email Input (Hidden by default) -->
+      <div class="section hidden" id="email-input">
+        <h2 class="section-title">Email Details</h2>
+        <div class="input-group">
+          <label class="input-label">To:</label>
+          <input
+            type="email"
+            id="email-to"
+            class="input-field"
+            placeholder="recipient@example.com"
+          >
+          <p class="error-message" id="email-error">Please enter a valid email address</p>
+        </div>
+        
+        <div class="input-group">
+          <label class="input-label">Subject:</label>
+          <input
+            type="text"
+            id="email-subject"
+            class="input-field"
+            placeholder="Email subject"
+          >
+        </div>
+        
+        <div class="input-group">
+          <label class="input-label">Body:</label>
+          <textarea
+            id="email-body"
+            class="input-field"
+            placeholder="Email body text"
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- QR Style -->
+      <div class="section">
+        <h2 class="section-title">QR Code Style</h2>
+        <div class="option-grid">
+          <div class="option-card selected" id="simple-option">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+            </svg>
+            <span class="option-label">Standard</span>
+            <span class="option-description">Higher error correction</span>
+          </div>
+          
+          <div class="option-card" id="reduced-option">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+            </svg>
+            <span class="option-label">Compact</span>
+            <span class="option-description">More efficient pattern</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logo Option -->
+      <div class="section">
+        <h2 class="section-title">Add Logo (Optional)</h2>
+        <div class="logo-upload">
+          <div class="logo-upload-left">
+            <div class="logo-preview" id="logo-preview">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <input type="file" id="logo-input" accept="image/*" style="display: none;">
+            </div>
+            <div class="logo-info">
+              <span class="logo-title">Upload Target logo</span>
+              <span class="logo-subtitle">PNG or JPG, max 1MB</span>
+            </div>
+          </div>
+          <div class="logo-toggle">
+            <input type="checkbox" id="logo-visible" checked>
+            <label for="logo-visible">Show logo</label>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Generate Button -->
+      <button id="generate-btn" class="generate-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        Generate QR Code
+      </button>
+      
+      <!-- QR Code Result -->
+      <div id="qrcode-result" class="result">
+        <h2 class="result-title">Your Target QR Code</h2>
+        <div class="qrcode-container">
+          <div id="qrcode"></div>
+          <div id="logo-overlay" class="logo-overlay">
+            <img id="logo-image" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgdmlld0JveD0iMCAwIDgwIDgwIj48Y2lyY2xlIGN4PSI0MCIgY3k9IjQwIiByPSI0MCIgZmlsbD0iI2UzMGIxNyIvPjxjaXJjbGUgY3g9IjQwIiBjeT0iNDAiIHI9IjMwIiBmaWxsPSIjZmZmIi8+PGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiNlMzBiMTciLz48L3N2Zz4=" alt="Logo">
+          </div>
+        </div>
+        <p class="qr-description" id="qr-type-text">
+          Standard QR with high error correction
+        </p>
+        <button id="download-btn" class="download-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Download QR Code
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const urlOption = document.getElementById('url-option');
+    const emailOption = document.getElementById('email-option');
+    const urlInput = document.getElementById('url-input');
+    const emailInput = document.getElementById('email-input');
+    const simpleOption = document.getElementById('simple-option');
+    const reducedOption = document.getElementById('reduced-option');
+    const generateBtn = document.getElementById('generate-btn');
+    const qrcodeResult = document.getElementById('qrcode-result');
+    const qrcodeContainer = document.getElementById('qrcode');
+    const downloadBtn = document.getElementById('download-btn');
+    const qrTypeText = document.getElementById('qr-type-text');
+    
+    // Logo elements
+    const logoInput = document.getElementById('logo-input');
+    const logoPreview = document.getElementById('logo-preview');
+    const logoOverlay = document.getElementById('logo-overlay');
+    const logoImage = document.getElementById('logo-image');
+    const logoVisible = document.getElementById('logo-visible');
+    
+    // QR instance
+    let qrcode = null;
+    
+    // Selected options
+    let selectedType = 'url';
+    let selectedStyle = 'simple';
+    
+    // Input validation functions
+    function validateUrl(url) {
+      try {
+        new URL(url);
+        document.getElementById('url-error').style.display = 'none';
+        document.getElementById('url-text').classList.remove('error');
+        return true;
+      } catch (e) {
+        document.getElementById('url-error').style.display = 'block';
+        document.getElementById('url-text').classList.add('error');
+        return false;
+      }
+    }
+    
+    function validateEmail(email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const valid = emailRegex.test(email);
+      document.getElementById('email-error').style.display = valid ? 'none' : 'block';
+      document.getElementById('email-to').classList.toggle('error', !valid);
+      return valid;
+    }
+    
+    // Handle input type selection
+    urlOption.addEventListener('click', () => {
+      selectedType = 'url';
+      urlOption.classList.add('selected');
+      emailOption.classList.remove('selected');
+      urlInput.classList.remove('hidden');
+      emailInput.classList.add('hidden');
+    });
+    
+    emailOption.addEventListener('click', () => {
+      selectedType = 'email';
+      emailOption.classList.add('selected');
+      urlOption.classList.remove('selected');
+      emailInput.classList.remove('hidden');
+      urlInput.classList.add('hidden');
+    });
+    
+    // Handle QR style selection
+    simpleOption.addEventListener('click', () => {
+      selectedStyle = 'simple';
+      simpleOption.classList.add('selected');
+      reducedOption.classList.remove('selected');
+    });
+    
+    reducedOption.addEventListener('click', () => {
+      selectedStyle = 'reduced';
+      reducedOption.classList.add('selected');
+      simpleOption.classList.remove('selected');
+    });
+    
+    // Handle logo upload
+    logoPreview.addEventListener('click', () => {
+      logoInput.click();
+    });
+    
+    logoInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          // Update preview
+          logoPreview.innerHTML = `<img src="${event.target.result}" alt="Logo">`;
+          // Update overlay
+          logoImage.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    // Handle logo visibility
+    logoVisible.addEventListener('change', () => {
+      logoOverlay.classList.toggle('visible', logoVisible.checked);
+    });
+    
+    // Generate QR code
+    generateBtn.addEventListener('click', () => {
+      let dataToEncode = '';
+      let isValid = false;
+      
+      if (selectedType === 'url') {
+        const urlText = document.getElementById('url-text').value;
+        isValid = validateUrl(urlText);
+        if (isValid) {
+          dataToEncode = urlText;
+        } else {
+          return;
+        }
+      } else {
+        const emailTo = document.getElementById('email-to').value;
+        const emailSubject = document.getElementById('email-subject').value;
+        const emailBody = document.getElementById('email-body').value;
+        
+        isValid = validateEmail(emailTo);
+        if (!isValid) return;
+        
+        // Format the email data with mailto protocol
+        dataToEncode = `mailto:${encodeURIComponent(emailTo)}`;
+        
+        // Add subject if provided
+        if (emailSubject.trim() !== '') {
+          dataToEncode += `?subject=${encodeURIComponent(emailSubject)}`;
+        }
+        
+        // Add body if provided
+        if (emailBody.trim() !== '') {
+          dataToEncode += `${emailSubject.trim() !== '' ? '&' : '?'}body=${encodeURIComponent(emailBody)}`;
+        }
+      }
+      
+      // Update QR type text
+      qrTypeText.textContent = selectedStyle === 'simple' 
+        ? 'Standard QR with high error correction'
+        : 'Compact QR with medium error correction';
+      
+      // Clear previous QR code
+      qrcodeContainer.innerHTML = '';
+      
+      // Set error correction level based on QR type
+      const errorCorrectionLevel = selectedStyle === 'simple' ? 'H' : 'M';
+      
+      // Generate QR code
+      qrcode = new QRCode(qrcodeContainer, {
+        text: dataToEncode,
+        width: 200,
+        height: 200,
+        colorDark: "#E30B17",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel[errorCorrectionLevel]
+      });
+      
+      // Show result
+      qrcodeResult.classList.add('visible');
+      
+      // Show logo if checked
+      logoOverlay.classList.toggle('visible', logoVisible.checked);
+      
+      // Scroll to result
+      qrcodeResult.scrollIntoView({ behavior: 'smooth' });
+    });
+    
+    // Handle download
+    downloadBtn.addEventListener('click', () => {
+      const canvas = qrcodeContainer.querySelector('canvas');
+      if (canvas) {
+        // Create a temporary canvas for the combined image
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        
+        // Draw QR code
+        tempCtx.drawImage(canvas, 0, 0);
+        
+        // Draw logo if visible
+        if (logoVisible.checked) {
+          const logoImg = new Image();
+          logoImg.onload = function() {
+            // Calculate logo size and position (center)
+            const logoSize = canvas.width * 0.2;
+            const logoX = (canvas.width - logoSize) / 2;
+            const logoY = (canvas.height - logoSize) / 2;
+            
+            // Draw white background for logo
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10);
+            
+            // Draw logo
+            tempCtx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+            
+            // Download the combined image
+            downloadImage(tempCanvas.toDataURL('image/png'), 'target-qrcode.png');
+          };
+          logoImg.src = logoImage.src;
+        } else {
+          // Download just the QR code
+          downloadImage(canvas.toDataURL('image/png'), 'target-qrcode.png');
+        }
+      }
+    });
+    
+    // Helper function to download an image
+    function downloadImage(dataUrl, filename) {
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
